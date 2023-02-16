@@ -60,6 +60,7 @@ var FilterMenu = function () {
     };
     FilterMenu.prototype.dropdownFilterItem = function (td, self) {
         var value = td.innerText;
+        var caption = this.options.mapTextToCaption(value);
         var dropdownFilterItem = document.createElement('div');
         dropdownFilterItem.className = 'dropdown-filter-item';
         var input = document.createElement('input');
@@ -70,7 +71,7 @@ var FilterMenu = function () {
         input.setAttribute('data-column', self.column.toString());
         input.setAttribute('data-index', self.index.toString());
         dropdownFilterItem.appendChild(input);
-        dropdownFilterItem.innerHTML = dropdownFilterItem.innerHTML.trim() + ' ' + value;
+        dropdownFilterItem.innerHTML = dropdownFilterItem.innerHTML.trim() + ' ' + caption;
         return dropdownFilterItem;
     };
     FilterMenu.prototype.dropdownFilterItemSelectAll = function () {
@@ -206,24 +207,26 @@ var FilterCollection = function () {
         var filterMenus = this.filterMenus;
         var rows = this.rows;
         var ths = this.ths;
+        var options = this.options;
         var updateRowVisibility = this.updateRowVisibility;
         this.target.find('.dropdown-filter-menu-item.item').change(function () {
             var index = $(this).data('index');
             var value = $(this).val();
             filterMenus[index].updateSelectAll();
-            updateRowVisibility(filterMenus, rows, ths);
+            updateRowVisibility(filterMenus, rows, ths, options);
         });
     };
     FilterCollection.prototype.bindSelectAllCheckboxes = function () {
         var filterMenus = this.filterMenus;
         var rows = this.rows;
         var ths = this.ths;
+        var options = this.options;
         var updateRowVisibility = this.updateRowVisibility;
         this.target.find('.dropdown-filter-menu-item.select-all').change(function () {
             var index = $(this).data('index');
             var value = this.checked;
             filterMenus[index].selectAllUpdate(value);
-            updateRowVisibility(filterMenus, rows, ths);
+            updateRowVisibility(filterMenus, rows, ths, options);
         });
     };
     FilterCollection.prototype.bindSort = function () {
@@ -239,23 +242,24 @@ var FilterCollection = function () {
             var column = $sortElement.data('column');
             var order = $sortElement.attr('class');
             sort(column, order, table, options);
-            updateRowVisibility(filterMenus, rows, ths);
+            updateRowVisibility(filterMenus, rows, ths, options);
         });
     };
     FilterCollection.prototype.bindSearch = function () {
         var filterMenus = this.filterMenus;
         var rows = this.rows;
         var ths = this.ths;
+        var options = this.options;
         var updateRowVisibility = this.updateRowVisibility;
         this.target.find('.dropdown-filter-search').keyup(function () {
             var $input = $(this).find('input');
             var index = $input.data('index');
             var value = $input.val();
             filterMenus[index].searchToggle(value);
-            updateRowVisibility(filterMenus, rows, ths);
+            updateRowVisibility(filterMenus, rows, ths, options);
         });
     };
-    FilterCollection.prototype.updateRowVisibility = function (filterMenus, rows, ths) {
+    FilterCollection.prototype.updateRowVisibility = function (filterMenus, rows, ths, options) {
         var showRows = rows;
         var hideRows = [];
         var selectedLists = filterMenus.map(function (filterMenu) {
@@ -279,16 +283,33 @@ var FilterCollection = function () {
                 $(rows[i]).show();
             }
         }
+        options.onUpdateVisibility(rows);
     };
     FilterCollection.prototype.sort = function (column, order, table, options) {
         var flip = 1;
         if (order === options.captions.z_to_a.toLowerCase().split(' ').join('-')) flip = -1;
         var tbody = $(table).find('tbody').get(0);
         var rows = $(tbody).find('tr').get();
+        var moment = options.moment;
+        var event = options.onChangeSort;
+        var sortDateFormat = options.sortDateFormat;
         rows.sort(function (a, b) {
             var A = a.children[column].innerText.toUpperCase();
             var B = b.children[column].innerText.toUpperCase();
-            if (!isNaN(Number(A)) && !isNaN(Number(B))) {
+            var isDates = false;
+            var parsedA;
+            var parsedB;
+            if (sortDateFormat !== null) {
+                parsedA = moment(A, sortDateFormat, true);
+                parsedB = moment(B, sortDateFormat, true);
+                if (parsedA.isValid() && parsedB.isValid()) {
+                    isDates = true;
+                }
+            }
+            if (isDates) {
+                if (parsedA.unix() < parsedB.unix()) return -1 * flip;
+                if (parsedA.unix() > parsedB.unix()) return 1 * flip;
+            } else if (!isNaN(Number(A)) && !isNaN(Number(B))) {
                 if (Number(A) < Number(B)) return -1 * flip;
                 if (Number(A) > Number(B)) return 1 * flip;
             } else {
@@ -300,6 +321,7 @@ var FilterCollection = function () {
         for (var i = 0; i < rows.length; i++) {
             tbody.appendChild(rows[i]);
         }
+        event(column, flip);
     };
     return FilterCollection;
 }();
@@ -316,6 +338,16 @@ $$1.fn.excelTableFilter = function (options) {
         search: 'Search',
         select_all: 'Select All'
     };
+    if (typeof options.mapTextToCaption === 'undefined') options.mapTextToCaption = function (s) {
+        return s;
+    };
+    if (typeof options.onUpdateVisibility === 'undefined') options.onUpdateVisibility = function () {
+        return null;
+    };
+    if (typeof options.onChangeSort === 'undefined') options.onChangeSort = function () {
+        return null;
+    };
+    if (typeof options.sortDateFormat === 'undefined') options.sortDateFormat = null;
     var filterCollection = new FilterCollection(target, options);
     filterCollection.initialize();
     return target;

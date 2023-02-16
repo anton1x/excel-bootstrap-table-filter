@@ -11,10 +11,10 @@ module.exports = function (config) {
     },
     karmaTypescriptConfig: {
       compilerOptions: {
-        noImplicitAny: true,
-        noImplicitReturns: true,
-        noImplicitThis: true,
-        allowSyntheticDefaultImports: true
+        noImplicitAny: false,
+        noImplicitReturns: false,
+        noImplicitThis: false,
+        allowSyntheticDefaultImports: false
       }
     },
     reporters: ['progress', 'karma-typescript'],

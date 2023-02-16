@@ -6,13 +6,22 @@ export default {
   dest: 'dist/excel-bootstrap-table-filter-bundle.js',
   format: 'iife',
   external: [
-    'jquery'
+    'jquery',
   ],
   globals: {
-    jquery: 'jQuery'
+    jquery: 'jQuery',
   },
   sourceMap: true,
   plugins: [
+    {
+      name: 'replace moment imports',
+      transform: code =>
+        ({
+          code: code.replace(/import\s*\*\s*as\s*moment/g, 'import moment'),
+          map: { mappings: '' }
+        })
+    },
+
     babel({
       exclude: 'node_modules/**',
     }),

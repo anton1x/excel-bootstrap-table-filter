@@ -85,6 +85,8 @@ export class FilterMenu {
   private dropdownFilterItem(td: HTMLElement, self: any): HTMLElement {
     // build holder div
     let value = td.innerText;
+
+    let caption = this.options.mapTextToCaption(value);
     let dropdownFilterItem = document.createElement('div');
     dropdownFilterItem.className = 'dropdown-filter-item';
     // build input
@@ -98,7 +100,7 @@ export class FilterMenu {
     input.setAttribute('data-index', self.index.toString());
     // append input to holding div
     dropdownFilterItem.appendChild(input);
-    dropdownFilterItem.innerHTML = dropdownFilterItem.innerHTML.trim() + ' ' +  value;
+    dropdownFilterItem.innerHTML = dropdownFilterItem.innerHTML.trim() + ' ' +  caption;
     return dropdownFilterItem;
   }
 

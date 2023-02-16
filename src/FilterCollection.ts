@@ -1,5 +1,4 @@
-import { FilterMenu } from './FilterMenu'
-
+import { FilterMenu } from './FilterMenu';
 export class FilterCollection {
 
   filterMenus:  Array<FilterMenu>;
@@ -35,12 +34,13 @@ export class FilterCollection {
     let filterMenus = this.filterMenus;
     let rows = this.rows;
     let ths = this.ths;
+    let options = this.options;
     let updateRowVisibility = this.updateRowVisibility;
     this.target.find('.dropdown-filter-menu-item.item').change(function() {
       let index = $(this).data('index');
       let value = $(this).val();
       filterMenus[index].updateSelectAll();
-      updateRowVisibility(filterMenus, rows, ths);
+      updateRowVisibility(filterMenus, rows, ths, options);
     });
   }
 
@@ -48,12 +48,13 @@ export class FilterCollection {
     let filterMenus = this.filterMenus;
     let rows = this.rows;
     let ths = this.ths;
+    let options = this.options;
     let updateRowVisibility = this.updateRowVisibility;
     this.target.find('.dropdown-filter-menu-item.select-all').change(function() {
       let index = $(this).data('index');
       let value = this.checked;
       filterMenus[index].selectAllUpdate(value);
-      updateRowVisibility(filterMenus, rows, ths);
+      updateRowVisibility(filterMenus, rows, ths, options);
     });
   }
 
@@ -70,7 +71,7 @@ export class FilterCollection {
       let column = $sortElement.data('column');
       let order = $sortElement.attr('class');
       sort(column, order, table, options);
-      updateRowVisibility(filterMenus, rows, ths);
+      updateRowVisibility(filterMenus, rows, ths, options);
     });
   }
 
@@ -78,17 +79,18 @@ export class FilterCollection {
     let filterMenus = this.filterMenus;
     let rows = this.rows;
     let ths = this.ths;
+    let options = this.options;
     let updateRowVisibility = this.updateRowVisibility;
     this.target.find('.dropdown-filter-search').keyup(function() {
       let $input = $(this).find('input');
       let index = $input.data('index');
       let value = $input.val();
       filterMenus[index].searchToggle(value);
-      updateRowVisibility(filterMenus, rows, ths);
+      updateRowVisibility(filterMenus, rows, ths, options);
     });
   }
 
-  private updateRowVisibility(filterMenus: Array<FilterMenu>, rows: Array<HTMLElement>, ths: Array<HTMLElement>): void {
+  private updateRowVisibility(filterMenus: Array<FilterMenu>, rows: Array<HTMLElement>, ths: Array<HTMLElement>, options: Options): void {
     let showRows = rows;
     let hideRows: Array<HTMLElement> = [];
     let selectedLists = filterMenus.map(function(filterMenu) {
@@ -113,6 +115,8 @@ export class FilterCollection {
         $(rows[i]).show();
       }
     }
+
+    options.onUpdateVisibility(rows);
   }
 
   private sort(column: number, order: string, table: HTMLElement, options: Options): void {
@@ -120,12 +124,33 @@ export class FilterCollection {
     if (order === options.captions.z_to_a.toLowerCase().split(' ').join('-')) flip = -1;
     let tbody = $(table).find('tbody').get(0);
     let rows = $(tbody).find('tr').get();
+    let moment = options.moment;
+
+    let event = options.onChangeSort;
+    let sortDateFormat = options.sortDateFormat;
 
     rows.sort(function(a, b) {
       var A = (a.children[column] as HTMLElement).innerText.toUpperCase();
       var B = (b.children[column] as HTMLElement).innerText.toUpperCase();
 
-      if (!isNaN(Number(A)) && !isNaN(Number(B))) {
+      let isDates = false;
+      let parsedA;
+      let parsedB;
+
+      if (sortDateFormat !== null) {
+        parsedA = moment(A, sortDateFormat, true)
+        parsedB = moment(B, sortDateFormat, true)
+
+        if (parsedA.isValid() && parsedB.isValid()) {
+          isDates = true;
+        }
+      }
+
+      if(isDates) {
+        if(parsedA.unix() < parsedB.unix()) return -1*flip;
+        if(parsedA.unix() > parsedB.unix()) return  1*flip;
+      }
+      else if (!isNaN(Number(A)) && !isNaN(Number(B))) {
         // handle numbers
         if(Number(A) < Number(B)) return -1*flip;
         if(Number(A) > Number(B)) return  1*flip;
@@ -140,6 +165,9 @@ export class FilterCollection {
     for (var i=0; i < rows.length; i++) {
       tbody.appendChild(rows[i]);
     }
+
+    event(column, flip);
+
   }
 
 
