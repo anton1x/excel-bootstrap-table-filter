@@ -82,26 +82,27 @@ export class FilterMenu {
     }
   }
 
-  private dropdownFilterItem(td: HTMLElement, self: any): HTMLElement {
+  private dropdownFilterItem(td: HTMLElement, self: any): Array<HTMLElement> {
     // build holder div
-    let value = td.innerText;
+    return td.innerText.split(this.options.listsDelimiter).map((value => {
+      let caption = this.options.mapTextToCaption(value);
+      let dropdownFilterItem = document.createElement('div');
+      dropdownFilterItem.className = 'dropdown-filter-item';
+      // build input
+      let input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = value.trim().replace(/ +(?= )/g,'');
+      input.setAttribute('checked','checked');
+      input.className = 'dropdown-filter-menu-item item';
+      // get index of td element
+      input.setAttribute('data-column', self.column.toString());
+      input.setAttribute('data-index', self.index.toString());
+      // append input to holding div
+      dropdownFilterItem.appendChild(input);
+      dropdownFilterItem.innerHTML = dropdownFilterItem.innerHTML.trim() + ' ' +  caption;
+      return dropdownFilterItem
+    }))
 
-    let caption = this.options.mapTextToCaption(value);
-    let dropdownFilterItem = document.createElement('div');
-    dropdownFilterItem.className = 'dropdown-filter-item';
-    // build input
-    let input = document.createElement('input');
-    input.type = 'checkbox';
-    input.value = value.trim().replace(/ +(?= )/g,'');
-    input.setAttribute('checked','checked');
-    input.className = 'dropdown-filter-menu-item item';
-    // get index of td element
-    input.setAttribute('data-column', self.column.toString());
-    input.setAttribute('data-index', self.index.toString());
-    // append input to holding div
-    dropdownFilterItem.appendChild(input);
-    dropdownFilterItem.innerHTML = dropdownFilterItem.innerHTML.trim() + ' ' +  caption;
-    return dropdownFilterItem;
   }
 
   private dropdownFilterItemSelectAll(): HTMLElement {
@@ -189,25 +190,43 @@ export class FilterMenu {
       return 0;
     })
     // create dropdown filter items out of each value
-    .map( (td) => {
-      return this.dropdownFilterItem(td, self);
+    // .map( (td) => {
+    //   return this.dropdownFilterItem(td, self)[0];
+    // })
+
+    let innerDivsExpanded:Array<HTMLElement> = new Array<HTMLElement>();
+
+    innerDivs.forEach((val) => {
+      let items = this.dropdownFilterItem(val, self)
+      items.forEach((item) => {
+        innerDivsExpanded.push(item)
+      })
     })
 
+    innerDivsExpanded = innerDivsExpanded.reduce(function(arr, el) {
+      // get unique values in column
+      let values = arr.map((el) => el.innerText.trim());
+      if (values.indexOf(el.innerText.trim()) < 0) arr.push(el);
+      // return unique values
+      return arr;
+    }, [])
+
     // map inputs to instance, we will need these later
-    this.inputs = innerDivs.map((div) => div.firstElementChild);
+    this.inputs = innerDivsExpanded.map((div) => div.firstElementChild);
 
     // add a select all checkbox
     let selectAllCheckboxDiv = this.dropdownFilterItemSelectAll();
     // map the select all  checkbox to the instance, we will need it later
     this.selectAllCheckbox = selectAllCheckboxDiv.firstElementChild;
     // the checkbox will precede the other inputs
-    innerDivs.unshift(selectAllCheckboxDiv);
+    innerDivsExpanded.unshift(selectAllCheckboxDiv);
 
     let searchFilterDiv = this.dropdownFilterSearch();
     this.searchFilter = searchFilterDiv.firstElementChild;
 
     // create outer div, and place all inner divs within it
-    let outerDiv = innerDivs.reduce(function(outerDiv, innerDiv) {
+    let outerDiv = innerDivsExpanded
+      .reduce(function(outerDiv, innerDiv) {
       outerDiv.appendChild(innerDiv);
       return outerDiv;
     }, document.createElement('div'));

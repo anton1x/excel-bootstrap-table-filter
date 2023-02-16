@@ -59,20 +59,22 @@ var FilterMenu = function () {
         }
     };
     FilterMenu.prototype.dropdownFilterItem = function (td, self) {
-        var value = td.innerText;
-        var caption = this.options.mapTextToCaption(value);
-        var dropdownFilterItem = document.createElement('div');
-        dropdownFilterItem.className = 'dropdown-filter-item';
-        var input = document.createElement('input');
-        input.type = 'checkbox';
-        input.value = value.trim().replace(/ +(?= )/g, '');
-        input.setAttribute('checked', 'checked');
-        input.className = 'dropdown-filter-menu-item item';
-        input.setAttribute('data-column', self.column.toString());
-        input.setAttribute('data-index', self.index.toString());
-        dropdownFilterItem.appendChild(input);
-        dropdownFilterItem.innerHTML = dropdownFilterItem.innerHTML.trim() + ' ' + caption;
-        return dropdownFilterItem;
+        var _this = this;
+        return td.innerText.split(this.options.listsDelimiter).map(function (value) {
+            var caption = _this.options.mapTextToCaption(value);
+            var dropdownFilterItem = document.createElement('div');
+            dropdownFilterItem.className = 'dropdown-filter-item';
+            var input = document.createElement('input');
+            input.type = 'checkbox';
+            input.value = value.trim().replace(/ +(?= )/g, '');
+            input.setAttribute('checked', 'checked');
+            input.className = 'dropdown-filter-menu-item item';
+            input.setAttribute('data-column', self.column.toString());
+            input.setAttribute('data-index', self.index.toString());
+            dropdownFilterItem.appendChild(input);
+            dropdownFilterItem.innerHTML = dropdownFilterItem.innerHTML.trim() + ' ' + caption;
+            return dropdownFilterItem;
+        });
     };
     FilterMenu.prototype.dropdownFilterItemSelectAll = function () {
         var value = this.options.captions.select_all;
@@ -134,18 +136,30 @@ var FilterMenu = function () {
                 if (A > B) return 1;
             }
             return 0;
-        }).map(function (td) {
-            return _this.dropdownFilterItem(td, self);
         });
-        this.inputs = innerDivs.map(function (div) {
+        var innerDivsExpanded = new Array();
+        innerDivs.forEach(function (val) {
+            var items = _this.dropdownFilterItem(val, self);
+            items.forEach(function (item) {
+                innerDivsExpanded.push(item);
+            });
+        });
+        innerDivsExpanded = innerDivsExpanded.reduce(function (arr, el) {
+            var values = arr.map(function (el) {
+                return el.innerText.trim();
+            });
+            if (values.indexOf(el.innerText.trim()) < 0) arr.push(el);
+            return arr;
+        }, []);
+        this.inputs = innerDivsExpanded.map(function (div) {
             return div.firstElementChild;
         });
         var selectAllCheckboxDiv = this.dropdownFilterItemSelectAll();
         this.selectAllCheckbox = selectAllCheckboxDiv.firstElementChild;
-        innerDivs.unshift(selectAllCheckboxDiv);
+        innerDivsExpanded.unshift(selectAllCheckboxDiv);
         var searchFilterDiv = this.dropdownFilterSearch();
         this.searchFilter = searchFilterDiv.firstElementChild;
-        var outerDiv = innerDivs.reduce(function (outerDiv, innerDiv) {
+        var outerDiv = innerDivsExpanded.reduce(function (outerDiv, innerDiv) {
             outerDiv.appendChild(innerDiv);
             return outerDiv;
         }, document.createElement('div'));
@@ -272,14 +286,27 @@ var FilterCollection = function () {
                 })
             };
         });
+        console.log("sel list", selectedLists);
         for (var i = 0; i < rows.length; i++) {
             var tds = rows[i].children;
+            var match = [];
             for (var j = 0; j < selectedLists.length; j++) {
-                var content = tds[selectedLists[j].column].innerText.trim().replace(/ +(?= )/g, '');
-                if (selectedLists[j].selected.indexOf(content) === -1) {
-                    $(rows[i]).hide();
-                    break;
+                match[j] = 0;
+                var contents = tds[selectedLists[j].column].innerText.trim().replace(/ +(?= )/g, '').split(options.listsDelimiter).map(function (i) {
+                    return i.trim();
+                });
+                console.log(contents);
+                for (var _i = 0, contents_1 = contents; _i < contents_1.length; _i++) {
+                    var content = contents_1[_i];
+                    if (selectedLists[j].selected.indexOf(content) !== -1) {
+                        match[j]++;
+                    }
                 }
+                console.log("match", match);
+            }
+            if (match.indexOf(0) !== -1) {
+                $(rows[i]).hide();
+            } else {
                 $(rows[i]).show();
             }
         }
@@ -338,6 +365,7 @@ $$1.fn.excelTableFilter = function (options) {
         search: 'Search',
         select_all: 'Select All'
     };
+    if (typeof options.listsDelimiter === 'undefined') options.listsDelimiter = null;
     if (typeof options.mapTextToCaption === 'undefined') options.mapTextToCaption = function (s) {
         return s;
     };

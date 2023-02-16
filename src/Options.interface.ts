@@ -10,6 +10,8 @@ interface Options {
         select_all: string,
     },
 
+    listsDelimiter?: string,
+
     sortDateFormat: string|null,
 
     onUpdateVisibility: (rows: Array<HTMLElement>) => {},

@@ -104,14 +104,31 @@ export class FilterCollection {
           })
       };
     });
+
+    console.log("sel list", selectedLists);
+
     for (let i=0; i < rows.length; i++) {
       let tds = rows[i].children;
+      let match = [];
       for (let j=0; j < selectedLists.length; j++) {
-        let content = (tds[selectedLists[j].column] as HTMLElement).innerText.trim().replace(/ +(?= )/g,'')
-        if (selectedLists[j].selected.indexOf(content) === -1 ) {
-          $(rows[i]).hide();
-          break;
+        match[j] = 0;
+        let contents = (tds[selectedLists[j].column] as HTMLElement).innerText.trim().replace(/ +(?= )/g,'').split(options.listsDelimiter).map((i) => i.trim())
+
+        console.log(contents);
+        for (let content of contents) {
+          if (selectedLists[j].selected.indexOf(content) !== -1 ) {
+            // $(rows[i]).hide();
+            match[j]++;
+          }
+          //$(rows[i]).show();
         }
+
+        console.log("match", match);
+
+      }
+      if (match.indexOf(0) !== -1) {
+        $(rows[i]).hide();
+      } else {
         $(rows[i]).show();
       }
     }

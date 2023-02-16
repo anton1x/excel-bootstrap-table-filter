@@ -18,6 +18,8 @@ import { FilterCollection } from './FilterCollection'
     select_all: 'Select All',
   }
 
+  if (typeof options.listsDelimiter === 'undefined') options.listsDelimiter = null;
+
   if (typeof options.mapTextToCaption === 'undefined') options.mapTextToCaption = (s) => s
 
   if (typeof options.onUpdateVisibility === 'undefined') options.onUpdateVisibility = () => null
