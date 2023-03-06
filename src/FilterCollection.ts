@@ -105,7 +105,7 @@ export class FilterCollection {
       };
     });
 
-    console.log("sel list", selectedLists);
+    //console.log("sel list", selectedLists);
 
     for (let i=0; i < rows.length; i++) {
       let tds = rows[i].children;
@@ -114,7 +114,7 @@ export class FilterCollection {
         match[j] = 0;
         let contents = (tds[selectedLists[j].column] as HTMLElement).innerText.trim().replace(/ +(?= )/g,'').split(options.listsDelimiter).map((i) => i.trim())
 
-        console.log(contents);
+        //console.log(contents);
         for (let content of contents) {
           if (selectedLists[j].selected.indexOf(content) !== -1 ) {
             // $(rows[i]).hide();
@@ -123,7 +123,7 @@ export class FilterCollection {
           //$(rows[i]).show();
         }
 
-        console.log("match", match);
+        //console.log("match", match);
 
       }
       if (match.indexOf(0) !== -1) {

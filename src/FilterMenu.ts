@@ -40,27 +40,38 @@ export class FilterMenu {
   }
 
   public searchToggle(value: string): void {
-    if (this.selectAllCheckbox instanceof HTMLInputElement) this.selectAllCheckbox.checked = false;
-    if (value.length === 0){
-      this.toggleAll(true);
-      if (this.selectAllCheckbox instanceof HTMLInputElement) this.selectAllCheckbox.checked = true;
-      return;
-    }
+    // if (this.selectAllCheckbox instanceof HTMLInputElement) this.selectAllCheckbox.checked = false;
+    // if (value.length === 0){
+    //   this.toggleAll(true);
+    //   if (this.selectAllCheckbox instanceof HTMLInputElement) this.selectAllCheckbox.checked = true;
+    //   return;
+    // }
     // deselect all checkboxes initially
-    this.toggleAll(false);
+    // this.toggleAll(false);
     // select checkboxes that match the search parameter
-    this.inputs.filter(function(input: HTMLInputElement) {
-      return input.value.toLowerCase().indexOf(value.toLowerCase()) > -1;
-    }).forEach(function(input: HTMLInputElement) {
-      input.checked = true;
-    });
+
+    if (value.length === 0) {
+      $(this.menu).find('.dropdown-filter-item').show();
+    }
+
+    this.inputs.forEach(function(input: HTMLInputElement) {
+      if (input.value.toLowerCase().indexOf(value.toLowerCase()) === -1) {
+        $(input).parent('.dropdown-filter-item').hide();
+      } else {
+        $(input).parent('.dropdown-filter-item').show();
+      }
+    })
+    //   .forEach(function(input: HTMLInputElement) {
+    //   //input.checked = true;
+    //   $(input).parent('.dropdown-filter-item').hide();
+    // });
   }
 
 
   public updateSelectAll(): void {
     if (this.selectAllCheckbox instanceof HTMLInputElement) {
       // clear search parameters, if any
-      $(this.searchFilter).val('');
+      //$(this.searchFilter).val('');
       // Check if all inputs are selected
       this.selectAllCheckbox.checked = (this.inputs.length === this.inputs.filter(function(input: HTMLInputElement) {
         return input.checked;
@@ -250,7 +261,7 @@ export class FilterMenu {
     let dropdownFilterDropdown = document.createElement('div');
     dropdownFilterDropdown.className = 'dropdown-filter-dropdown';
     let arrow = document.createElement('span');
-    arrow.className = 'glyphicon glyphicon-arrow-down dropdown-filter-icon';
+    arrow.className = 'dropdown-filter-icon';
     let icon = document.createElement('i');
     icon.className = 'arrow-down';
     arrow.appendChild(icon);

@@ -27,22 +27,19 @@ var FilterMenu = function () {
         });
     };
     FilterMenu.prototype.searchToggle = function (value) {
-        if (this.selectAllCheckbox instanceof HTMLInputElement) this.selectAllCheckbox.checked = false;
         if (value.length === 0) {
-            this.toggleAll(true);
-            if (this.selectAllCheckbox instanceof HTMLInputElement) this.selectAllCheckbox.checked = true;
-            return;
+            $(this.menu).find('.dropdown-filter-item').show();
         }
-        this.toggleAll(false);
-        this.inputs.filter(function (input) {
-            return input.value.toLowerCase().indexOf(value.toLowerCase()) > -1;
-        }).forEach(function (input) {
-            input.checked = true;
+        this.inputs.forEach(function (input) {
+            if (input.value.toLowerCase().indexOf(value.toLowerCase()) === -1) {
+                $(input).parent('.dropdown-filter-item').hide();
+            } else {
+                $(input).parent('.dropdown-filter-item').show();
+            }
         });
     };
     FilterMenu.prototype.updateSelectAll = function () {
         if (this.selectAllCheckbox instanceof HTMLInputElement) {
-            $(this.searchFilter).val('');
             this.selectAllCheckbox.checked = this.inputs.length === this.inputs.filter(function (input) {
                 return input.checked;
             }).length;
@@ -176,7 +173,7 @@ var FilterMenu = function () {
         var dropdownFilterDropdown = document.createElement('div');
         dropdownFilterDropdown.className = 'dropdown-filter-dropdown';
         var arrow = document.createElement('span');
-        arrow.className = 'glyphicon glyphicon-arrow-down dropdown-filter-icon';
+        arrow.className = 'dropdown-filter-icon';
         var icon = document.createElement('i');
         icon.className = 'arrow-down';
         arrow.appendChild(icon);
@@ -286,7 +283,6 @@ var FilterCollection = function () {
                 })
             };
         });
-        console.log("sel list", selectedLists);
         for (var i = 0; i < rows.length; i++) {
             var tds = rows[i].children;
             var match = [];
@@ -295,14 +291,12 @@ var FilterCollection = function () {
                 var contents = tds[selectedLists[j].column].innerText.trim().replace(/ +(?= )/g, '').split(options.listsDelimiter).map(function (i) {
                     return i.trim();
                 });
-                console.log(contents);
                 for (var _i = 0, contents_1 = contents; _i < contents_1.length; _i++) {
                     var content = contents_1[_i];
                     if (selectedLists[j].selected.indexOf(content) !== -1) {
                         match[j]++;
                     }
                 }
-                console.log("match", match);
             }
             if (match.indexOf(0) !== -1) {
                 $(rows[i]).hide();

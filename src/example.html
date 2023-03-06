@@ -256,7 +256,7 @@
           moment: moment,
 
           onChangeSort(column, direction) {
-            console.log('change sort:', column, direction);
+            //console.log('change sort:', column, direction);
           },
 
           onUpdateVisibility(rows) {
@@ -266,7 +266,7 @@
                 countVisible++;
               }
             });
-            console.log(countVisible);
+            //console.log(countVisible);
             if (countVisible === 0) {
               $('.not_found').show();
             } else {
